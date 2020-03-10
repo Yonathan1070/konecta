@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Tablas\Usuarios;
 use App\Models\Tablas\UsuariosRoles;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Usuarios Controller, donde se visualizaran y realizaran cambios
@@ -33,13 +35,17 @@ class UsuariosController extends Controller
      */
     public function obtenerAdministradores()
     {
-        $usuarios = DB::table('TBL_Usuarios as u')
-            ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', '=', 'u.id')
-            ->join('TBL_Roles as r', 'r.id', '=', 'ur.USR_RLS_Rol_Id')
-            ->where('ur.USR_RLS_Estado', '=', 1)
-            ->where('r.id', '=', 1)
-            ->get();
-        return $usuarios;
+        $user = Auth::user()->roles()->where('USR_RLS_Estado', 1)->first();
+        if (strtolower($user->RLS_Nombre_Rol) == 'administrador') {
+            $usuarios = DB::table('TBL_Usuarios as u')
+                ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', '=', 'u.id')
+                ->join('TBL_Roles as r', 'r.id', '=', 'ur.USR_RLS_Rol_Id')
+                ->where('ur.USR_RLS_Estado', '=', 1)
+                ->where('r.id', '=', 1)
+                ->get();
+            return $usuarios;
+        }
+        return response()->json(['error'=>'No tiene acceso'], 401);
     }
 
     /**
@@ -47,13 +53,17 @@ class UsuariosController extends Controller
      */
     public function obtenerVendedores()
     {
-        $usuarios = DB::table('TBL_Usuarios as u')
-            ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', '=', 'u.id')
-            ->join('TBL_Roles as r', 'r.id', '=', 'ur.USR_RLS_Rol_Id')
-            ->where('ur.USR_RLS_Estado', '=', 1)
-            ->where('r.id', '=', 2)
-            ->get();
-        return $usuarios;
+        if(can('listar-vendedores')){
+            $usuarios = DB::table('TBL_Usuarios as u')
+                ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', '=', 'u.id')
+                ->join('TBL_Roles as r', 'r.id', '=', 'ur.USR_RLS_Rol_Id')
+                ->where('ur.USR_RLS_Estado', '=', 1)
+                ->where('r.id', '=', 2)
+                ->get();
+            return $usuarios;
+        }
+        
+        return response()->json(['error'=>'No tiene acceso'], 401);
     }
 
     /**
@@ -61,13 +71,16 @@ class UsuariosController extends Controller
      */
     public function obtenerClientes()
     {
-        $usuarios = DB::table('TBL_Usuarios as u')
-            ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', '=', 'u.id')
-            ->join('TBL_Roles as r', 'r.id', '=', 'ur.USR_RLS_Rol_Id')
-            ->where('ur.USR_RLS_Estado', '=', 1)
-            ->where('r.id', '=', 3)
-            ->get();
-        return $usuarios;
+        if(can('listar-clientes')){
+            $usuarios = DB::table('TBL_Usuarios as u')
+                ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', '=', 'u.id')
+                ->join('TBL_Roles as r', 'r.id', '=', 'ur.USR_RLS_Rol_Id')
+                ->where('ur.USR_RLS_Estado', '=', 1)
+                ->where('r.id', '=', 3)
+                ->get();
+            return $usuarios;
+        }
+        return response()->json(['error'=>'No tiene acceso'], 401);
     }
 
     /**
@@ -75,42 +88,33 @@ class UsuariosController extends Controller
      */
     public function crearUsuario(Request $request)
     {
-        if (
-            Usuarios::where('USR_Documento_Usuario', '=', $request['USR_Documento_Usuario'])
-                ->first()
-        ) {
-            return response()
-                ->json('El documento del usuario ya está registrado', 200);
-        }
-        if (
-            Usuarios::where('USR_Correo_Usuario', '=', $request['USR_Correo_Usuario'])
-                ->first()
-        ) {
-            return response()
-                ->json('El correo del usuario ya se encuentra en uso', 200);
-        }
-        if (
-            Usuarios::where('USR_Nombre_Usuario', '=', $request['USR_Nombre_Usuario'])
-                ->first()
-        ) {
-            return response()
-                ->json('El Nombre de usuario ya está en uso', 200);
-        }
-        $usuario = Usuarios::create([
-            'USR_Documento_Usuario' => $request['USR_Documento_Usuario'],
-            'USR_Nombres_Usuario' => $request['USR_Nombres_Usuario'],
-            'USR_Apellidos_Usuario' => $request['USR_Apellidos_Usuario'],
-            'USR_Direccion_Residencia_Usuario' => $request['USR_Direccion_Residencia_Usuario'],
-            'USR_Correo_Usuario' => $request['USR_Correo_Usuario'],
-            'USR_Nombre_Usuario' => $request['USR_Nombre_Usuario'],
-            'password' => bcrypt($request['password'])
+        $validador = Validator::make($request->all(), [
+            'USR_Documento_Usuario' => 'required|unique:TBL_Usuarios,USR_Documento_Usuario',
+            'USR_Nombres_Usuario' => 'required',
+            'USR_Apellidos_Usuario' => 'required',
+            'USR_Direccion_Residencia_Usuario' => 'required',
+            'USR_Correo_Usuario' => 'required|unique:TBL_Usuarios,USR_Correo_Usuario',
+            'USR_Nombre_Usuario' => 'required|unique:TBL_Usuarios,USR_Nombre_Usuario',
+            'password' => 'required',
+            'confirm_password' => 'required|same:password',
+            'Rol_Id' => 'required'
         ]);
-        UsuariosRoles::create([
-            'USR_RLS_Rol_Id' => $request['Id_Rol'],
-            'USR_RLS_Usuario_Id' => $usuario->id,
-            'USR_RLS_Estado' => 1
-        ]);
-        return $usuario;
+
+        if ($validador->fails()) {
+            return response()->json(['error' => $validador->errors()], 422);
+        }
+
+        if ($request['Rol_Id'] == 2 && can('crear-vendedores')) {
+            $usuario = Usuarios::crearUsuario($request);
+            UsuariosRoles::crearAsociacion($request, $usuario->id);
+            return response()->json(['success' => $usuario], 200);
+        } else if ($request['Rol_Id'] == 3 && can('crear-clientes')) {
+            $usuario = Usuarios::crearUsuario($request);
+            UsuariosRoles::crearAsociacion($request, $usuario->id);
+            return response()->json(['success' => $usuario], 200);
+        } else {
+            return response()->json(['error'=>'No tiene acceso'], 401);
+        }
     }
 
     /**
@@ -120,8 +124,22 @@ class UsuariosController extends Controller
      */
     public function obtenerUsuario($id)
     {
-        $usuario = Usuarios::find($id);
-        return $usuario;
+        $usuario = DB::table('TBL_Usuarios as u')
+            ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', 'u.id')
+            ->join('TBL_Roles as r', 'r.id', 'ur.USR_RLS_Rol_Id')
+            ->where('u.id', $id)
+            ->first();
+        if (strtolower($usuario->RLS_Nombre_Rol) == 'administrador') {
+            return response()->json(['success' => $usuario], 200);
+        }
+        if (can('obtener-vendedor') && strtolower($usuario->RLS_Nombre_Rol) == 'vendedor') {
+            return response()->json(['success' => $usuario], 200);
+        }
+        if (can('obtener-cliente') && strtolower($usuario->RLS_Nombre_Rol) == 'cliente') {
+            return response()->json(['success' => $usuario], 200);
+        }
+        
+        return response()->json(['error'=>'No tiene acceso'], 401);
     }
 
     /**
@@ -132,8 +150,36 @@ class UsuariosController extends Controller
      */
     public function editarUsuario(Request $request, $id)
     {
-        $usuario = $this->obtenerUsuario($id);
-        $usuario->fill($request->all())->save();
+        $validador = Validator::make($request->all(), [
+            'USR_Documento_Usuario' => 'required|unique:TBL_Usuarios,USR_Documento_Usuario,'. $id,
+            'USR_Nombres_Usuario' => 'required',
+            'USR_Apellidos_Usuario' => 'required',
+            'USR_Direccion_Residencia_Usuario' => 'required',
+            'USR_Correo_Usuario' => 'required|unique:TBL_Usuarios,USR_Correo_Usuario,'. $id,
+            'USR_Nombre_Usuario' => 'required|unique:TBL_Usuarios,USR_Nombre_Usuario,'. $id,
+        ]);
+
+        if ($validador->fails()) {
+            return response()->json(['error' => $validador->errors()], 422);
+        }
+
+        $usuario = DB::table('TBL_Usuarios as u')
+            ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', 'u.id')
+            ->join('TBL_Roles as r', 'r.id', 'ur.USR_RLS_Rol_Id')
+            ->where('u.id', $id)
+            ->first();
+        
+        if (can('editar-vendedores') && strtolower($usuario->RLS_Nombre_Rol) == 'vendedor') {
+            $usuario = Usuarios::find($id);
+            $usuario->fill($request->all())->save();
+            return response()->json(['success' => $usuario], 200);
+        } else if (can('editar-clientes') && strtolower($usuario->RLS_Nombre_Rol) == 'cliente') {
+            $usuario = Usuarios::find($id);
+            $usuario->fill($request->all())->save();
+            return response()->json(['success' => $usuario], 200);
+        } else {
+            return response()->json(['error'=>'No tiene acceso'], 401);
+        }
         return $usuario;
     }
 
@@ -144,8 +190,28 @@ class UsuariosController extends Controller
      */
     public function eliminarUsuario($id)
     {
-        $usuario = $this->obtenerUsuario($id);
-        $usuario->delete();
+        $usuario = DB::table('TBL_Usuarios as u')
+            ->join('TBL_Usuarios_Roles as ur', 'ur.USR_RLS_Usuario_Id', 'u.id')
+            ->join('TBL_Roles as r', 'r.id', 'ur.USR_RLS_Rol_Id')
+            ->where('u.id', $id)
+            ->select('r.*', 'ur.id as Id_Relacion')
+            ->first();
+        
+        $idRelacion = $usuario->Id_Relacion;
+        
+        if (can('eliminar-vendedores') && strtolower($usuario->RLS_Nombre_Rol) == 'vendedor') {
+            UsuariosRoles::find($idRelacion)->delete();
+            $usuario = Usuarios::find($id);
+            $usuario->delete();
+            return response()->json(['eliminado' => $usuario], 200);
+        } else if (can('eliminar-clientes') && strtolower($usuario->RLS_Nombre_Rol) == 'cliente') {
+            UsuariosRoles::find($idRelacion)->delete();
+            $usuario = Usuarios::find($id);
+            $usuario->delete();
+            return response()->json(['eliminado' => $usuario], 200);
+        } else {
+            return response()->json(['error'=>'No tiene acceso'], 401);
+        }
         return $usuario;
     }
 }

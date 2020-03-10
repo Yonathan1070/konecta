@@ -24,4 +24,14 @@ class UsuariosRoles extends Model
     ];
     protected $guarded = ['id'];
     public $timestamps = false;
+
+    //Función para crear la asociación del usuario con el rol
+    public static function crearAsociacion($request, $id)
+    {
+        UsuariosRoles::create([
+            'USR_RLS_Rol_Id' => $request['Rol_Id'],
+            'USR_RLS_Usuario_Id' => $id,
+            'USR_RLS_Estado' => 1
+        ]);
+    }
 }

@@ -20,7 +20,7 @@ class TablaUsuariosSeeder extends Seeder
             'USR_Direccion_Residencia_Usuario' => 'Calle 5 # 13 18',
             'USR_Correo_Usuario' => 'yonathancam@hotmail.com',
             'USR_Nombre_Usuario' => 'yonathan',
-            'password' => bcrypt('yonathan')
+            'password' => 'yonathan'
         ]);
     }
 }
