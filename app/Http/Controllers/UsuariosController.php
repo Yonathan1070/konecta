@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * Usuarios Controller, donde se visualizaran y realizaran cambios
+ * UsuariosController, donde se visualizaran y realizaran cambios
  * en la Base de Datos de los usuarios
  * 
  * @author: Yonathan Bohorquez
- * @email: ycbohorquez@ucundinamarca.edu.co
+ * @email: yonathancam@hotmail.com
  * 
  * 
  * @version: 07/03/2020 1.0
@@ -84,7 +84,7 @@ class UsuariosController extends Controller
     }
 
     /**
-     * Crear Usuario Administrador
+     * Crear Usuarios
      */
     public function crearUsuario(Request $request)
     {

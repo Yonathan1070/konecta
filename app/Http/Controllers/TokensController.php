@@ -7,37 +7,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * TokensController, permite realizar el inicio de sesión y generar el
+ * token JWT para el uso de la api rest de la aplicación, al igual que
+ * finalizar la sesión activa.
+ * 
+ * @author: Yonathan Bohorquez
+ * @email: yonathancam@hotmail.com
+ * 
+ * 
+ * @version: 09/03/2020 1.0
+ */
 class TokensController extends Controller
-{
-
-    /** 
-     * Register api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function register(Request $request) 
-    { 
-        $validator = Validator::make($request->all(), [ 
-            'USR_Documento_Usuario' => 'required',
-            'USR_Nombres_Usuario' => 'required',
-            'USR_Apellidos_Usuario' => 'required',
-            'USR_Direccion_Residencia_Usuario' => 'required',
-            'USR_Correo_Usuario' => 'required|email',
-            'USR_Nombre_Usuario' => 'required',
-            'password' => 'required'
-        ]);
-        if ($validator->fails()) { 
-            return response()->json(['error'=>$validator->errors()], 401);            
-        }
-        $input = $request->all(); 
-        $input['password'] = bcrypt($input['password']); 
-        $user = Usuarios::create($input); 
-        $success['token'] =  $user->createToken('MyApp')-> accessToken; 
-        $success['name'] =  $user->USR_Nombres_Usuario;
-        
-        return response()->json(['success'=>$success], 200); 
-    }
-    
+{   
     public function login(Request $request)
     {
         $credenciales = $request->only('username', 'password');
@@ -65,17 +47,6 @@ class TokensController extends Controller
         else{ 
             return response()->json(['error'=>'Unauthorised'], 401); 
         }
-    }
-
-    /** 
-     * details api 
-     * 
-     * @return \Illuminate\Http\Response 
-     */ 
-    public function details() 
-    { 
-        $user = Auth::user(); 
-        return response()->json(['success' => $user], 200); 
     }
 
     public function logout()

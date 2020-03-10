@@ -1,8 +1,18 @@
 <?php
 
-use App\Models\Tablas\Permiso;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+
+/**
+ * Helper permisos, permite validar si el rol tiene acceso al permiso
+ * que se desea acceder.
+ * 
+ * @author: Yonathan Bohorquez
+ * @email: yonathancam@hotmail.com
+ * 
+ * 
+ * @version: 09/03/2020 1.0
+ */
 
 if (!function_exists('canUser')) {
     function can($permiso, $redirect = true)

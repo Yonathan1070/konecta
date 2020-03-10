@@ -7,10 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 /**
  * Usuarios, modelo donde encontramos los atributos de la tabla
- * usuarios de la Base de Datos
+ * usuarios de la Base de Datos y realizamos las distintas
+ * operaciones de sobre la misma.
  * 
  * @author: Yonathan Bohorquez
- * @email: ycbohorquez@ucundinamarca.edu.co
+ * @email: yonathancam@hotmail.com
  * 
  * 
  * @version: 07/03/2020 1.0

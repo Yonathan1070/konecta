@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  * datos sobre la tabla Roles
  * 
  * @author: Yonathan Bohorquez
- * @email: ycbohorquez@ucundinamarca.edu.co
+ * @email: yonathancam@hotmail.com
  * 
  * 
  * @version: 07/03/2020 1.0
