@@ -6,6 +6,7 @@ use App\Models\Tablas\Usuarios;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * TokensController, permite realizar el inicio de sesión y generar el
@@ -35,7 +36,9 @@ class TokensController extends Controller
             ], 422);
         }
 
-        if(Auth::attempt(['USR_Nombre_Usuario' => $credenciales['username'], 'password' => $credenciales['password']])){ 
+        $usuario = Usuarios::where('USR_Nombre_Usuario', $credenciales['username'])->first();
+        $correcta = Hash::check($credenciales['password'], $usuario->password, []);
+        if(Auth::attempt(['USR_Nombre_Usuario' => $credenciales['username'], 'password' => $credenciales['password']]) && $correcta == true){ 
             $user = Auth::user();
             $roles = $user->roles()->where('USR_RLS_Estado', 1)->first();
             $success = [
